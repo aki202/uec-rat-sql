@@ -1,7 +1,11 @@
 FROM pytorch/pytorch:1.5-cuda10.1-cudnn7-devel
 
 ENV LC_ALL=C.UTF-8 \
-    LANG=C.UTF-8
+    LANG=C.UTF-8 \
+    http_proxy=http://proxy.uec.ac.jp:8080 \
+    https_proxy=http://proxy.uec.ac.jp:8080 \
+    HTTP_PROXY=http://proxy.uec.ac.jp:8080 \
+    HTTPS_PROXY=http://proxy.uec.ac.jp:8080
 
 RUN mkdir -p /usr/share/man/man1 && \
     apt-get update && apt-get install -y \
@@ -17,12 +21,12 @@ RUN mkdir -p /usr/share/man/man1 && \
 # Install app requirements first to avoid invalidating the cache
 COPY requirements.txt setup.py /app/
 WORKDIR /app
-RUN pip install --user -r requirements.txt --no-warn-script-location && \
-    pip install --user entmax && \
-    python -c "import nltk; nltk.download('stopwords'); nltk.download('punkt')"
+RUN pip install --proxy=http://proxy.uec.ac.jp:8080/ -r requirements.txt --no-warn-script-location && \
+    pip install --proxy=http://proxy.uec.ac.jp:8080/ entmax && \
+    python -c "import nltk; nltk.set_proxy('http://proxy.uec.ac.jp:8080'); nltk.download('stopwords'); nltk.download('punkt')"
 
 # Cache the pretrained BERT model
-RUN python -c "from transformers import BertModel; BertModel.from_pretrained('bert-large-uncased-whole-word-masking')"
+RUN python -c "from transformers import BertModel; BertModel.from_pretrained('bert-large-uncased-whole-word-masking', proxies={'https': 'proxy.uec.ac.jp:8080')"
 
 # Download & cache StanfordNLP
 RUN mkdir -p /app/third_party && \
@@ -45,6 +49,6 @@ RUN mkdir -p /mnt/data && \
 RUN /bin/bash -c 'if compgen -G "/app/**/*.sh" > /dev/null; then dos2unix /app/**/*.sh; fi'
 
 # Extend PYTHONPATH to load WikiSQL dependencies
-ENV PYTHONPATH="/app/third_party/wikisql/:${PYTHONPATH}" 
+ENV PYTHONPATH="/app/third_party/wikisql/:${PYTHONPATH}"
 
 ENTRYPOINT bash

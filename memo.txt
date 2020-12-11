@@ -1,0 +1,33 @@
+python run.py preprocess experiments/spider-glove-run.jsonnet
+nohup python run.py preprocess experiments/spider-glove-run.jsonnet &
+nohup python run.py train experiments/spider-glove-run.jsonnet &
+nohup python run.py eval experiments/spider-glove-run.jsonnet &
+
+nohup sh -c 'sleep 5; echo Success!' &
+nohup while :; do echo 1; sleep 3; done &
+nohup sh -c 'while :; do echo 1; sleep 3; done' &
+
+docker build --build-arg http_proxy=http://proxy.uec.ac.jp:8080/ --build-arg https_proxy=http://proxy.uec.ac.jp:8080/ -t ratsql .
+docker run --gpus all -m4g -v ~/dev/sql_data:/mnt/data -it ratsql
+git clone https://github.com/salesforce/WikiSQL third_party/wikisql
+
+nvidia-docker run --rm nvidia/cuda:10.2-base nvidia-smi
+
+docker run --gpus 2 -it -v $(pwd)/dev/rat-sql:/app --name rat-sql -e "http_proxy=http://proxy.uec.ac.jp:8080" -e "https_proxy=http://proxy.uec.ac.jp:8080" pytorch/pytorch:1.5-cuda10.1-cudnn7-devel bash
+
+docker run --gpus 2 -it -m4g -v /home0/y2017/a1720001/dev/sql_data:/mnt/data -v /home0/y2017/a1720001/dev/rat-sql:/app ratsql2
+python run.py preprocess experiments/spider-glove-run.jsonnet
+
+alias exit='echo Do not use command `exit` for logout operation. Use Ctrl-p,Ctrl-q.'
+alias syu='echo Do not use command `exit` for logout operation. Use Ctrl-p,Ctrl-q.'
+
+---
+docker run --gpus 2 -it -m4g -v /home0/y2017/a1720001/dev/sql_data:/mnt/data -v /home0/y2017/a1720001/dev/rat-sql:/app ratsql2
+cd /app
+export PYTHONPATH=/app/third_party/wikisql
+
+export HTTP_PROXY=http://proxy.uec.ac.jp:8080
+export HTTPS_PROXY=http://proxy.uec.ac.jp:8080
+export http_proxy=http://proxy.uec.ac.jp:8080
+export https_proxy=http://proxy.uec.ac.jp:8080
+
